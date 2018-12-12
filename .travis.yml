@@ -1,0 +1,47 @@
+sudo: required
+language: python
+python:
+- '3.6'
+env:
+  matrix:
+  - ENVIRONMENT_NAME=development
+  - ENVIRONMENT_NAME=staging
+  global:
+  - secure: C6mGhm8KeaP484aoli4WOD+2C2BFZAQmjaJzvfklmEdu21Y52ucqxlQqTQTPhtDxkETjRwyMpZ9+u1voiUYMRUaBHMs0nDF6AHyrGzalOSsX/NSgNFRKSYTCIVGvLOcWpK0ezOi4XkQa6CZ/Ezsp4XkGFQyWGvsHTVNHFHOKA/uhiNoRLXjV9lgdkjNP9IJMTxNUbRbV0EcP/s8f2AAD0psSxpkLYcbZIhcJi/YYs1AIhf6UTVZYOn0j+jHzhbzHKDEZDPgoJNO3aR1UMMjQa4aOv0/A87tWUjDM5cxUftcE+D35JE0OF2Sn/YiYcfz8P84emmOS4wslJbkAXkViPZ6wwNXT+sTOVHIdLHu4hD+H/ZQ71vWqDac7SkZ/Qy3s51NTtumKkTjqgIdha/pwIRe596+rJr24quCJNzjVh74B/bwucFJKUnh2FE5tW0WcZol5USiUF648uT0BRZ0S/i/ir29rKg4EAobnmvsn5vdTWiX/PnboR8KP1LkRJeNyRIKsWlMBZn/kB+Y2Zb34L8XIqbZRV/4Ec67FkzVIqc3i9Z80rifrBsyMyub+DyfFvv1oVCxVfkTKZyk7n5CD5REEmxp7r0KZ59CMNfrvuytQtZDQDx3oUCkdouyF7j+Fq6w2KvhlYRsegOEf5mUMMbfv3MkZf1EA3YBPmRFvBSw=
+  - secure: DSEatztBID41OepQdEDucKd6bn3G6kx13xIk4/DID2xKCA7Vugtx3DkfnISiXatzz1p+yDAxe7Dv80gvJ5XigWfXFf7bnxkwhrvbeS9Vj4NDWOOuviOSnM/wAsHXZyPzfPXpC1HJOIw/4c+KGUVdIMi4V8/u2yy5E+mh3dlT9gN/fnTNiuH5s2yxwCStNhcohwtdmhkWvPuQg6vg/eVXYPkjDMI2M9g5FJfJ9bxXkFHUplIeOiXwNPCtRwXOgcFV3FoUTkc9DLzPjOXsx1sV2hYTEcczpTSlhN7Tez1Q1v3rTUetP28H80+Yy0yEQhH3tvrfppmoDuAvJq8PSKwNux7LhMDDS73nud+4es2mO4F2xXLI5G8R/GqNwzBhnj7xvMaVy6n+iHHcXArvRpchCnMPAxBPHgGB02/XoJEBYq8ZBe4B9ylT26PZpeSJkOFtrXwemOGDHtlrTeJ4VdzjFSIf8Rr6OZTpDGmLZK4XOAoqIGhaLSSS2Z35N24m3Xog5sH2vrxxdQIJZaSvfRwHZCAJhW86uubryOY0g5IIt33h+xYMrhDbmbzZL9Ud99YyK4ZUZ8kEYH6JqPg78n89xKnj0NTlOHVy7CxeWpnguaspxJ1uXNRhgi1WFNLKOmDw7eXnd+aGPQb0As0S49982HLqpOGjgafM+R5VcO/nPiY=
+before_install:
+- export REGION=us-east-1
+- export PROJECT_NAME=terrvis-backend
+- export AWS_DEFAULT_REGION=${REGION}
+- wget https://releases.hashicorp.com/terraform/0.11.10/terraform_0.11.10_linux_amd64.zip
+  -O /tmp/terraform.zip
+- sudo unzip -d /usr/local/bin/ /tmp/terraform.zip
+- pip install awscli
+- make terrvis_backend terrvis_tfvars
+- cd ./terrvis_deploy ;
+- terraform init -input=false -force-copy ;
+script:
+- terraform plan -input=false -var-file=./environments/${ENVIRONMENT_NAME}.tfvars
+jobs:
+  include:
+  - stage: Deploy development
+    script:
+    - terraform apply -auto-approve -input=false -var-file=./environments/${ENVIRONMENT_NAME}.tfvars
+    env:
+    - ENVIRONMENT_NAME=development
+    if: branch = master
+  - stage: Deploy staging
+    script:
+    - terraform apply -auto-approve -input=false -var-file=./environments/${ENVIRONMENT_NAME}.tfvars
+    env:
+    - ENVIRONMENT_NAME=staging
+    if: branch = master
+notifications:
+  slack:
+    rooms:
+      secure: MFv9AoWU+tRzK+XkbCS8tWf/R53ryCJ6vgv509ODkDuQnSdFR6otoHoqDhRLd2wYohuVSloGte+wPPGrxwnkMbHZdQm04QTeNFvF1yPsHTf9QdP+b245GIiCzjMCXaD1dtH+B+vCR4FTgFD9YE1H2ansEz5kB1JBRrIGVYdLKk+3pg61+wPJcPRmYjrn2fHR9YNPq3gbyI4PTCh2g0kOQetoOaEWbnMAbQ2okfRSq+OaWjnjZoKWSxYdSUxPOogpQgIjHqlHIwhK17FMhKQy4M0x5w5N3ibiEMUOMGi0Maci3meWNrNfmXMzSQ5P79YHaoPnXWdjKcXfnKBTao5i9RiJQfJAZSYMVV31H4gypRnUnx78i9Y6pfvrBO93ENNE/ar+rjw0G89sgwC0O9E6SjokzEeK4QtdHhbZsmm4cUEee9+NXFgeXe+odU9yqHGvvvFtB2FNOva2ja+GrKwygqpl5JSy2ODq52GMhjR7rpANkj89KtHzsgFRsQb0oRiECD7VFQxbpATvZm6SkCgAZ3Hgo3fMXP5o/G13xKKvyOnGFw4o2Rw6LEdYMu2sZSxybdM/BdlGPDd7QNwjKOdS89E+JY7CA2nmZGkAWm93v9wAkEZkZQCXOi1m7T3Wii6pRzORSikfBnmEPwEQ1wTyTHtFQblbZCBiXIamNFoIuu0=
+    use_notice: true
+    template:
+      - "%{repository_slug}#%{build_number} (%{branch} - %{commit} : %{author}): %{message}"
+      - "Change view : %{compare_url}"
+      - "Build details : %{build_url}"
