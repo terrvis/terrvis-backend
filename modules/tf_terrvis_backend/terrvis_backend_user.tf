@@ -1,5 +1,5 @@
 resource "aws_iam_user" "terrvis_deploy_user" {
-  name = "terrvis-deploy"
+  name = "terrvis-deploy-${var.environment_name}"
   path = "/"
 }
 
@@ -9,7 +9,7 @@ resource "aws_iam_access_key" "terrvis_backend_user_access_key" {
 }
 
 resource "aws_iam_policy" "terrvis_s3_deploy_policy" {
-  name        = "terrvis-s3-deploy"
+  name        = "terrvis-s3-deploy-${var.environment_name}"
   description = "S3 Policy tailed for Terrvis services"
 
   policy = <<TERRVIS
@@ -88,7 +88,7 @@ TERRVIS
 }
 
 resource "aws_iam_policy" "terrvis_dynamodb_deploy_policy" {
-  name = "terrvis-dynamodb-deploy"
+  name = "terrvis-dynamodb-deploy-${var.environment_name}"
   description = "DynamoDB Policy tailed for Terrvis services"
 
   policy = <<TERRVIS
@@ -135,7 +135,7 @@ TERRVIS
 }
 
 resource "aws_iam_policy" "terrvis_cloudtrail_deploy_policy" {
-  name = "terrvis-cloudtrail-deploy"
+  name = "terrvis-cloudtrail-deploy-${var.environment_name}"
   description = "Cloudtrail Policy tailed for Terrvis services"
 
   policy = <<TERRVIS
@@ -169,7 +169,7 @@ TERRVIS
 }
 
 resource "aws_iam_policy" "terrvis_iam_deploy_policy" {
-  name = "terrvis-iam-deploy"
+  name = "terrvis-iam-deploy-${var.environment_name}"
   description = "IAM Policy tailed for Terrvis services"
 
   policy = <<TERRVIS
